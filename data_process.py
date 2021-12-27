@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 from class_define import *
 
-IMAGE_SIZE = [224, 224]
+IMAGE_SIZE = [512, 512]
 
 def decode_image(image_data):
     image = tf.image.decode_jpeg(image_data, channels=3)

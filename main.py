@@ -42,7 +42,7 @@ else:
     physical_devices = tf.config.list_physical_devices('GPU') 
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
-GCS_PATH = GCS_DS_PATH + '/tfrecords-jpeg-224x224' #192, 224, 331, 512 with IMAGE_SIZE in data_process
+GCS_PATH = GCS_DS_PATH + '/tfrecords-jpeg-512x512' #192, 224, 331, 512 with IMAGE_SIZE in data_process
 TRAINING_FILENAMES = tf.io.gfile.glob(GCS_PATH + '/train/*.tfrec')
 VALIDATION_FILENAMES = tf.io.gfile.glob(GCS_PATH + '/val/*.tfrec')
 TEST_FILENAMES = tf.io.gfile.glob(GCS_PATH + '/test/*.tfrec')
