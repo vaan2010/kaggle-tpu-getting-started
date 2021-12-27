@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 def build_model(class_num, image_size):
-    pretrained_backbone = tf.keras.applications.vgg16.VGG16(
+    pretrained_backbone = tf.keras.applications.resnet50.ResNet50(
         include_top=False
         , weights='imagenet'
         , pooling='avg'

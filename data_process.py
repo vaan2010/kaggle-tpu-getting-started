@@ -1,11 +1,9 @@
 import re
 import numpy as np
 import tensorflow as tf
-from path_define import *
+from class_define import *
 
 IMAGE_SIZE = [224, 224]
-AUTO = tf.data.experimental.AUTOTUNE
-GLOBAL_BATCH_SIZE = 64
 
 def decode_image(image_data):
     image = tf.image.decode_jpeg(image_data, channels=3)
@@ -34,7 +32,7 @@ def read_unlabeled_tfrecord(example):
     idnum = example['id']
     return image, idnum # returns a dataset of image(s)
 
-def load_dataset(filenames, labeled=True, ordered=False):
+def load_dataset(filenames, labeled=True, ordered=False, AUTO=tf.data.experimental.AUTOTUNE):
     # Read from TFRecords. For optimal performance, reading from multiple files at once and
     # disregarding data order. Order does not matter since we will be shuffling the data anyway.
 
@@ -59,8 +57,8 @@ def data_augment(image, label):
     #image = tf.image.random_saturation(image, 0, 2)
     return image, label   
 
-def get_training_dataset(training_files):
-    dataset = load_dataset(training_files, labeled=True)
+def get_training_dataset(training_files, GLOBAL_BATCH_SIZE, AUTO=tf.data.experimental.AUTOTUNE):
+    dataset = load_dataset(training_files, labeled=True, AUTO=AUTO)
     dataset = dataset.map(data_augment, num_parallel_calls=AUTO)
     # dataset = dataset.repeat() # the training dataset must repeat for several epochs
     dataset = dataset.shuffle(2048)
@@ -68,14 +66,14 @@ def get_training_dataset(training_files):
     dataset = dataset.prefetch(AUTO) # prefetch next batch while training (autotune prefetch buffer size)
     return dataset
 
-def get_validation_dataset(validation_files, ordered=False):
+def get_validation_dataset(validation_files, GLOBAL_BATCH_SIZE, ordered=False, AUTO=tf.data.experimental.AUTOTUNE):
     dataset = load_dataset(validation_files, labeled=True, ordered=ordered)
     dataset = dataset.batch(GLOBAL_BATCH_SIZE)
     dataset = dataset.cache()
     dataset = dataset.prefetch(AUTO)
     return dataset
 
-def get_test_dataset(test_files, ordered=False):
+def get_test_dataset(test_files, GLOBAL_BATCH_SIZE, ordered=False, AUTO=tf.data.experimental.AUTOTUNE):
     dataset = load_dataset(test_files, labeled=False, ordered=ordered)
     dataset = dataset.batch(GLOBAL_BATCH_SIZE)
     dataset = dataset.prefetch(AUTO)
