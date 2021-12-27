@@ -2,10 +2,8 @@
 import math, os
 from tqdm import tqdm
 from shutil import copyfile
-from model import *
 from data_process import *
-from train import *
-from test import *
+from model import *
 
 # 使用 TPU，檢測TPU是否有被使用
 try:
@@ -74,15 +72,17 @@ with strategy.scope():
     model = build_model(class_num=len(CLASSES), image_size = IMAGE_SIZE) # CLASSES was defined in class_define
     model.summary()
     
+  # Set reduction to `none` so we can do the reduction afterwards and divide by
+  # global batch size.
     loss_object = tf.keras.losses.SparseCategoricalCrossentropy(
         from_logits=False,
         reduction=tf.keras.losses.Reduction.NONE
     )
-
-    def compute_loss(labels, predictions, GLOBAL_BATCH_SIZE):
+    def compute_loss(labels, predictions):
         per_example_loss = loss_object(labels, predictions)
         return tf.nn.compute_average_loss(per_example_loss, global_batch_size=GLOBAL_BATCH_SIZE)
     
+
     train_accuracy = tf.keras.metrics.SparseCategoricalAccuracy(name='train_accuracy')
     
     lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
@@ -95,14 +95,32 @@ with strategy.scope():
 ###############################################
 
 # 開始訓練 #######################################
-dist_train_dataset = strategy.experimental_distribute_dataset(ds_train)
+def train_step(inputs):
+    images, labels = inputs
 
+    with tf.GradientTape() as tape:
+        predictions = model(images, training=True)
+        loss = compute_loss(labels, predictions)
+
+    gradients = tape.gradient(loss, model.trainable_variables)
+    optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+
+    train_accuracy.update_state(labels, predictions)
+    return loss 
+
+@tf.function
+def distributed_train_step(dataset_inputs):
+    per_replica_losses = strategy.run(train_step, args=(dataset_inputs,))
+    return strategy.reduce(tf.distribute.ReduceOp.SUM, per_replica_losses,
+                         axis=None)
+
+dist_train_dataset = strategy.experimental_distribute_dataset(ds_train)
 for epoch in range(EPOCHS):
     # TRAIN LOOP
     total_loss = 0.0
     num_batches = 0
     for x in tqdm(dist_train_dataset):
-        total_loss += distributed_train_step(strategy, x, model, optimizer, train_accuracy, compute_loss, GLOBAL_BATCH_SIZE)
+        total_loss += distributed_train_step(x)
         num_batches += 1
     train_loss = total_loss / num_batches
   
@@ -113,9 +131,20 @@ for epoch in range(EPOCHS):
 ###############################################
 
 # 進行預測 ######################################
+def test_step(inputs):
+    images, idnum = inputs
+    
+    output = model(images, training=False)
+    pred = tf.argmax(output, axis=1)
+    return idnum, pred
+
+@tf.function
+def distributed_test_step(dataset_inputs):
+    return strategy.run(test_step, args=(dataset_inputs,))
+
 data_list = []
 for x in tqdm(ds_test):
-    idnum, pred = distributed_test_step(strategy, x, model)
+    idnum, pred = distributed_test_step(x)
 
     # idnum_np, pred_np = idnum.values[0].numpy(), pred.values[0].numpy() # multi TPU
     idnum_np, pred_np = idnum.numpy(), pred.numpy()
@@ -126,5 +155,8 @@ for x in tqdm(ds_test):
         
 # 提交答案 ######################################
 from generate_csv import *
-generate_result(data_list)
+if REPLICAS > 1:
+    generate_result(data_list, True)
+else:
+    generate_result(data_list, False)
 ###############################################
