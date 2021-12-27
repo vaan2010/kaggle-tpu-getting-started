@@ -38,11 +38,8 @@ if REPLICAS > 1:
     
 else:
     GCS_DS_PATH = './Data'
-<<<<<<< HEAD
     GLOBAL_BATCH_SIZE = 32
-=======
     GLOBAL_BATCH_SIZE = 8
->>>>>>> 91295f6 (densenet)
     physical_devices = tf.config.list_physical_devices('GPU') 
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
 

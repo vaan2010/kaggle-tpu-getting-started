@@ -128,7 +128,6 @@ def _resnet(block, blocks_num, im_width=224, im_height=224, num_classes=1000, in
     return model
 
 def build_model(class_num, image_size):
-<<<<<<< HEAD
     # pretrained_backbone = tf.keras.applications.resnet50.ResNet50(
         # include_top=False
         # , weights='imagenet'
@@ -138,7 +137,6 @@ def build_model(class_num, image_size):
     # pretrained_backbone.trainable = False
     
     pretrained_backbone = _resnet(BasicBlock, [2, 2, 4, 2], image_size[0], image_size[1], include_top=False)
-=======
     pretrained_backbone = tf.keras.applications.densenet.DenseNet121(
         include_top=False
         , weights='imagenet'
@@ -148,7 +146,6 @@ def build_model(class_num, image_size):
     pretrained_backbone.trainable = False
     
     # pretrained_backbone = _resnet(BasicBlock, [2, 2, 4, 2], image_size[0], image_size[1], include_top=False)
->>>>>>> 91295f6 (densenet)
     pretrained_backbone.summary()
     
     inputs = tf.keras.Input( shape=(*image_size, 3) ) 
