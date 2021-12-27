@@ -22,8 +22,7 @@ else:
 REPLICAS = strategy.num_replicas_in_sync
 
 print("REPLICAS: ", REPLICAS)
-physical_devices = tf.config.list_physical_devices('GPU') 
-tf.config.experimental.set_memory_growth(physical_devices[0], True)
+
 
 # Data ##########################################
 ## Define Save and Load Data Location #################
@@ -40,6 +39,8 @@ if REPLICAS > 1:
 else:
     GCS_DS_PATH = './Data'
     GLOBAL_BATCH_SIZE = 64
+    physical_devices = tf.config.list_physical_devices('GPU') 
+    tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 GCS_PATH = GCS_DS_PATH + '/tfrecords-jpeg-224x224' #192, 224, 331, 512 with IMAGE_SIZE in data_process
 TRAINING_FILENAMES = tf.io.gfile.glob(GCS_PATH + '/train/*.tfrec')
@@ -146,8 +147,11 @@ data_list = []
 for x in tqdm(ds_test):
     idnum, pred = distributed_test_step(x)
 
-    # idnum_np, pred_np = idnum.values[0].numpy(), pred.values[0].numpy() # multi TPU
-    idnum_np, pred_np = idnum.numpy(), pred.numpy()
+    if REPLICAS > 1:
+        idnum_np, pred_np = idnum.values[0].numpy(), pred.values[0].numpy() # multi TPU
+    else:
+        idnum_np, pred_np = idnum.numpy(), pred.numpy()
+        
     for i in range(idnum_np.shape[0]):
         data_list.append({"id":idnum_np[i].decode(), "label":pred_np[i]})
 ###############################################
