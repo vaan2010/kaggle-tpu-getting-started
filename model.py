@@ -136,8 +136,8 @@ def build_model(class_num, image_size):
     
     # pretrained_backbone.trainable = False
     
-    pretrained_backbone = _resnet(BasicBlock, [2, 2, 4, 2], image_size[0], image_size[1], include_top=False)
-    pretrained_backbone = tf.keras.applications.densenet.DenseNet121(
+    # pretrained_backbone = _resnet(BasicBlock, [2, 2, 4, 2], image_size[0], image_size[1], include_top=False)
+    pretrained_backbone = tf.keras.applications.resnet.ResNet101(
         include_top=False
         , weights='imagenet'
         , pooling='avg'
