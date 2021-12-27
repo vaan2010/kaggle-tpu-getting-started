@@ -136,7 +136,7 @@ def build_model(class_num, image_size):
     
     # pretrained_backbone.trainable = False
     
-    pretrained_backbone = _resnet(BasicBlock, [2, 2, 4, 2], include_top=False)
+    pretrained_backbone = _resnet(BasicBlock, [2, 2, 4, 2], image_size[0], image_size[1], include_top=False)
     pretrained_backbone.summary()
     
     inputs = tf.keras.Input( shape=(*image_size, 3) ) 
