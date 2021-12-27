@@ -112,8 +112,7 @@ def train_step(inputs):
 @tf.function
 def distributed_train_step(dataset_inputs):
     per_replica_losses = strategy.run(train_step, args=(dataset_inputs,))
-    return strategy.reduce(tf.distribute.ReduceOp.SUM, per_replica_losses,
-                         axis=None)
+    return strategy.reduce(tf.distribute.ReduceOp.SUM, per_replica_losses, axis=None)
 
 dist_train_dataset = strategy.experimental_distribute_dataset(ds_train)
 for epoch in range(EPOCHS):
