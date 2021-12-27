@@ -66,7 +66,7 @@ print("Test:", ds_test)
 print("="*100)
 ###############################################
 
-EPOCHS = 1
+EPOCHS = 50
 
 # Model 的 loss、優化器定義 ##########################
 with strategy.scope():
