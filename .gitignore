@@ -1,3 +1,8 @@
+<<<<<<< HEAD
 __pycache__/
 *.py[cod]
+=======
+__pycache__/
+*.py[cod]
+>>>>>>> 91295f6 (densenet)
 Data/
